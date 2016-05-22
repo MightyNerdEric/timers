@@ -33,27 +33,45 @@ import sys
 
 class Timer():
     def __init__(self):
-        usage = """Usage: timers [add|update|delete args]
-  Options:
+        usage = """Usage: timers [-h|--help|-e|--examples|add|update|delete args]
+
+    -h|--help      Show this help message
+    -e|--examples  Show usage examples
     add "Event description (future/past tense)" YYYY/MM/DD
     delete <event_number>
-    update <event_number> "Event description" YYYY/MM/DD
+    update <event_number> "Event description" YYYY/MM/DD"""
 
-  Examples:
-    timers add "the beginning of our expedition to the center of the Earth" 2040/01/01
-      Output: "It is X years, X months, and X days until the beginning of our \
-expedition to the center of the Earth"
-    timers add "we drunkenly applied for a grant to travel to the center of \
-the Earth" 2014/05/24
-      Output: "It has been X years, X months, and X days since we drunkenly \
-applied for a grant to travel to the center of the Earth"
-"""
+        examples = """Examples:
+    Command: timers add "the beginning of our expedition to the center of the \
+Earth" 2040/01/01
+    timers Output: "It is X years, X months, and X days until the beginning \
+of our expedition to the center of the Earth"
+    Command: timers add "we drunkenly applied for a grant to travel to the \
+center of the Earth" 2014/05/24
+    timers Output: "It has been X years, X months, and X days since we \
+drunkenly applied for a grant to travel to the center of the Earth"
+
+    Command: timers delete 1
+    Result: Deletes timer numbered 1 (print timers to see numbers)
+    Command: timers update 1 "we will get drunk and apply for additional \
+shovel funding" 2025/11/09
+    Result: Timer 1 will be changed to the text and date specified"""
+
         timersFile = os.path.expanduser("~") + "/.timers"
         argsLen = len(sys.argv)
-        if argsLen == 1:
+        if argsLen == 1 and os.path.exists(timersFile) and \
+           len(open(timersFile, "r").read()) > 0:
             self.printTimers(timersFile)
+        elif argsLen == 1:
+            print """*** ERROR: No timers found; try using the "timers add" \
+command. ***"""
+            print usage
+            exit(0)
         elif sys.argv[1] == "-h" or sys.argv[1] == "--help":
             print usage
+            exit(0)
+        elif sys.argv[1] == "-e" or sys.argv[1] == "--examples":
+            print examples
             exit(0)
         elif sys.argv[1] == "add":
             if argsLen != 4:
