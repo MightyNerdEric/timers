@@ -20,7 +20,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
+'''
+timers is a simple command line application written for GNU/Linux that gives
+information on how much time has passed since a past date, or how much time
+there is until a future date.
+'''
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import os.path
@@ -32,16 +36,17 @@ class Timer():
         usage = """Usage: timers [add|update|delete args]
   Options:
     add "Event description (future/past tense)" YYYY/MM/DD
-    delete [event number]
+    delete <event_number>
+    update <event_number> "Event description" YYYY/MM/DD
 
   Examples:
-    add "the beginning of our expedition to the center of the Earth" 2040/01/01
-      Output: "[time] until the beginning of our expedition to the center of \
-the Earth"
-    add "we drunkenly applied for a grant to travel to the center of \
+    timers add "the beginning of our expedition to the center of the Earth" 2040/01/01
+      Output: "It is X years, X months, and X days until the beginning of our \
+expedition to the center of the Earth"
+    timers add "we drunkenly applied for a grant to travel to the center of \
 the Earth" 2014/05/24
-      Output: "It has been [time] since we drunkenly applied for a grant to \
-travel to the center of the Earth"
+      Output: "It has been X years, X months, and X days since we drunkenly \
+applied for a grant to travel to the center of the Earth"
 """
         timersFile = os.path.expanduser("~") + "/.timers"
         argsLen = len(sys.argv)
@@ -54,12 +59,18 @@ travel to the center of the Earth"
             if argsLen != 4:
                 print usage
                 exit(1)
-            self.addTimer(timersFile, sys.argv[3], sys.argv[2])
+            self.addTimer(timersFile, sys.argv[2], sys.argv[3])
         elif sys.argv[1] == "delete":
             if argsLen != 3 or not sys.argv[2].isdigit():
                 print usage
                 exit(1)
             self.deleteTimer(timersFile, int(sys.argv[2])-1)
+        elif sys.argv[1] == "update":
+            if argsLen != 5 or not sys.argv[2].isdigit():
+                print usage
+                exit(1)
+            self.updateTimer(timersFile, int(sys.argv[2])-1, sys.argv[3],
+                             sys.argv[4])
 
     def printTimers(self, timersFile):
         timerLines = open(timersFile, "r").readlines()
@@ -106,12 +117,12 @@ travel to the center of the Earth"
                 print str(n+1) + ". It has been " + years + months + days + \
                     " since " + event
             elif today:
-                print str(n+1) + ". Today " + event
+                print str(n+1) + ". Today (is)" + event
             else:
                 print str(n+1) + ". It is " + years + months + days + \
                     " until " + event
 
-    def addTimer(self, timersFile, date, event):
+    def addTimer(self, timersFile, event, date):
         if date.find("/") > 0:
             dateFormat = "%Y/%m/%d"
         elif date.find("-") > 0:
@@ -126,7 +137,27 @@ travel to the center of the Earth"
         newline = datetime.strftime(newDate, "%Y%m%d") + " " + event + "\n"
         open(timersFile, "a").write(newline)
 
-#    def updateTimer(self, timersFile):
+    def updateTimer(self, timersFile, eventNum, event, date):
+        if date.find("/") > 0:
+            dateFormat = "%Y/%m/%d"
+        elif date.find("-") > 0:
+            dateFormat = "%Y-%m-%d"
+        else:
+            dateFormat = "%Y%m%d"
+        try:
+            newDate = datetime.strptime(date, dateFormat)
+        except ValueError:
+            print "Error: Date should be formatted YYYY/MM/DD"
+            exit(1)
+        newline = datetime.strftime(newDate, "%Y%m%d") + " " + event + "\n"
+        timerLines = open(timersFile, "r").readlines()
+        newTimerLines = []
+        for index, line in enumerate(timerLines):
+            if index == eventNum:
+                newTimerLines += newline
+            else:
+                newTimerLines += line
+        open(timersFile, "w").writelines(newTimerLines)
 
     def deleteTimer(self, timersFile, eventNum):
         timerLines = open(timersFile, "r").readlines()
