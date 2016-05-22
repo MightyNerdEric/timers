@@ -30,9 +30,19 @@ import sys
 class Timer():
     def __init__(self):
         usage = """Usage: timers [add|update|delete args]
- Options:
-    add "Event description (past tense)" YYYY/MM/DD
-    delete [event number]"""
+  Options:
+    add "Event description (future/past tense)" YYYY/MM/DD
+    delete [event number]
+
+  Examples:
+    add "the beginning of our expedition to the center of the Earth" 2040/01/01
+      Output: "[time] until the beginning of our expedition to the center of \
+the Earth"
+    add "we drunkenly applied for a grant to travel to the center of \
+the Earth" 2014/05/24
+      Output: "It has been [time] since we drunkenly applied for a grant to \
+travel to the center of the Earth"
+"""
         timersFile = os.path.expanduser("~") + "/.timers"
         argsLen = len(sys.argv)
         if argsLen == 1:
@@ -58,32 +68,48 @@ class Timer():
             if len(timerWords) < 2:
                 continue
             date = datetime.strptime(timerWords[0], "%Y%m%d")
-            delta = relativedelta(datetime.today(), date)
+            delta = relativedelta(date, datetime.today())
+
+            pastTense = False
+            today = False
+            if delta.years < 0 or delta.months < 0 or delta.days < 0:
+                pastTense = True
+            elif delta.years == 0 and delta.months == 0 and delta.days == 0:
+                today = True
             years = ""
             months = ""
             days = ""
-            if delta.years > 0:
-                if delta.years == 1:
-                    years = str(delta.years) + " year"
+            dYears = abs(delta.years)
+            dMonths = abs(delta.months)
+            dDays = abs(delta.days)
+            if dYears > 0:
+                if dYears == 1:
+                    years = str(dYears) + " year"
                 else:
-                    years = str(delta.years) + " years"
-            if delta.months > 0:
+                    years = str(dYears) + " years"
+            if dMonths > 0:
                 if years:
                     months = ", "
-                if delta.months == 1:
-                    months += str(delta.months) + " month"
+                if dMonths == 1:
+                    months += str(dMonths) + " month"
                 else:
-                    months += str(delta.months) + " months"
-            if delta.days > 0:
+                    months += str(dMonths) + " months"
+            if dDays > 0:
                 if years or months:
                     days = ", "
-                if delta.days == 1:
-                    days += str(delta.days) + " day"
+                if dDays == 1:
+                    days += str(dDays) + " day"
                 else:
-                    days += str(delta.days) + " days"
+                    days += str(dDays) + " days"
             event = " ".join(timerWords[1:])
-            print str(n+1) + ". It has been " + years + months + days + \
-                " since " + event
+            if pastTense:
+                print str(n+1) + ". It has been " + years + months + days + \
+                    " since " + event
+            elif today:
+                print str(n+1) + ". Today " + event
+            else:
+                print str(n+1) + ". It is " + years + months + days + \
+                    " until " + event
 
     def addTimer(self, timersFile, date, event):
         if date.find("/") > 0:
