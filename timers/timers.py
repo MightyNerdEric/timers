@@ -32,7 +32,7 @@ class Timer():
         usage = """Usage: timers [add|update|delete args]
  Options:
     add "Event description (past tense)" YYYY/MM/DD
-    delete "Event description\""""
+    delete [event number]"""
         timersFile = os.path.expanduser("~") + "/.timers"
         argsLen = len(sys.argv)
         if argsLen == 1:
@@ -45,6 +45,11 @@ class Timer():
                 print usage
                 exit(1)
             self.addTimer(timersFile, sys.argv[3], sys.argv[2])
+        elif sys.argv[1] == "delete":
+            if argsLen != 3 or not sys.argv[2].isdigit():
+                print usage
+                exit(1)
+            self.deleteTimer(timersFile, int(sys.argv[2])-1)
 
     def printTimers(self, timersFile):
         timerLines = open(timersFile, "r").readlines()
@@ -58,15 +63,24 @@ class Timer():
             months = ""
             days = ""
             if delta.years > 0:
-                years = str(delta.years) + " years"
+                if delta.years == 1:
+                    years = str(delta.years) + " year"
+                else:
+                    years = str(delta.years) + " years"
             if delta.months > 0:
                 if years:
                     months = ", "
-                months += str(delta.months) + " months"
+                if delta.months == 1:
+                    months += str(delta.months) + " month"
+                else:
+                    months += str(delta.months) + " months"
             if delta.days > 0:
                 if years or months:
                     days = ", "
-                days += str(delta.days) + " days"
+                if delta.days == 1:
+                    days += str(delta.days) + " day"
+                else:
+                    days += str(delta.days) + " days"
             event = " ".join(timerWords[1:])
             print str(n+1) + ". It has been " + years + months + days + \
                 " since " + event
@@ -87,6 +101,14 @@ class Timer():
         open(timersFile, "a").write(newline)
 
 #    def updateTimer(self, timersFile):
+
+    def deleteTimer(self, timersFile, eventNum):
+        timerLines = open(timersFile, "r").readlines()
+        newTimerLines = []
+        for index, line in enumerate(timerLines):
+            if index != eventNum:
+                newTimerLines += line
+        open(timersFile, "w").writelines(newTimerLines)
 
 if __name__ == "__main__":
     timer = Timer()
