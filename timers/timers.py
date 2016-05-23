@@ -33,13 +33,17 @@ import sys
 
 class Timer():
     def __init__(self):
-        usage = """Usage: timers [-h|--help|-e|--examples|add|update|delete args]
+        usage = """Usage: timers \
+[-h|--help|-e|--examples|add|update|delete|sort ...]
 
     -h|--help      Show this help message
     -e|--examples  Show usage examples
-    add "Event description (future/past tense)" YYYY/MM/DD
-    delete <event_number>
-    update <event_number> "Event description" YYYY/MM/DD"""
+    add "Event description (future/past tense)" YYYY/MM/DD : Add a new timer
+    delete <event_number> : Delete an existing timer
+    update <event_number> "Event description" YYYY/MM/DD : Update an existing \
+timer
+    sort [(d)escending] : Sort timers. Default is ascending date order. \
+Specify "d" or "descending" for descending date order."""
 
         examples = """Examples:
     Command: timers add "the beginning of our expedition to the center of the \
@@ -89,6 +93,15 @@ command. ***"""
                 exit(1)
             self.updateTimer(timersFile, int(sys.argv[2])-1, sys.argv[3],
                              sys.argv[4])
+        elif sys.argv[1] == "sort":
+            if argsLen > 3 or \
+               (argsLen == 3 and sys.argv[2] not in ["d", "descending"]):
+                print usage
+                exit(1)
+            elif argsLen == 3 and sys.argv[2] in ["d", "descending"]:
+                self.sort(timersFile, reverseTimers=True)
+            else:
+                self.sort(timersFile)
 
     def printTimers(self, timersFile):
         timerLines = open(timersFile, "r").readlines()
@@ -184,6 +197,12 @@ command. ***"""
             if index != eventNum:
                 newTimerLines += line
         open(timersFile, "w").writelines(newTimerLines)
+
+    def sort(self, timersFile, reverseTimers=False):
+        timerLines = open(timersFile, "r").readlines()
+        timerLines.sort(reverse=reverseTimers)
+        open(timersFile, "w").writelines(timerLines)
+        self.printTimers(timersFile)
 
 if __name__ == "__main__":
     timer = Timer()
